@@ -147,9 +147,6 @@ export default function PlinkoGame() {
   return (
     <div className="h-screen bg-[#0F212E] p-6">
       {/* Balance Display */}
-      <div className="max-w-[900px] mx-auto mb-4 flex justify-center items-center">
-        <BalanceDisplay balance={balance} setBalance={setBalance} />
-      </div>
 
       <div className="max-w-[900px] mx-auto flex gap-6">
         {/* Left Panel */}

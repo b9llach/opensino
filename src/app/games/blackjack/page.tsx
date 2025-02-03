@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { motion, useAnimation, useDragControls } from "framer-motion"
+import { useBalance } from "@/contexts/BalanceContext"
 
 type Card = {
   suit: '♠️' | '♥️' | '♣️' | '♦️'
@@ -34,33 +35,15 @@ type BetChip = {
 }
 
 export default function BlackjackGame() {
+    const { balance, setBalance } = useBalance()
     const [deck, setDeck] = useState<Card[]>([])
     const [playerHand, setPlayerHand] = useState<Card[]>([])
     const [dealerHand, setDealerHand] = useState<Card[]>([])
     const [gameState, setGameState] = useState<GameState>('betting')
-    const [chips, setChips] = useState(() => {
-      // Only access localStorage on the client side
-      if (typeof window !== 'undefined') {
-        const savedBalance = localStorage.getItem('balance')
-        return savedBalance ? parseInt(savedBalance) : 1000
-      }
-      return 1000 // Default value for server-side rendering
-    })
     const [currentBet, setCurrentBet] = useState(0)
     const [message, setMessage] = useState('')
     const [betChips, setBetChips] = useState<BetChip[]>([])
     const [chipId, setChipId] = useState(0)
-
-    // Add this effect to save balance changes
-    useEffect(() => {
-      localStorage.setItem('balance', chips.toString())
-    }, [chips])
-
-    // Add a reset balance function
-    const resetBalance = () => {
-      setChips(1000)
-      localStorage.setItem('balance', '1000')
-    }
 
     const chipValues: ChipValue[] = [
       { value: 100, color: 'bg-purple-600', borderColor: 'border-purple-300', textColor: 'text-purple-100', shadowColor: 'shadow-purple-900' },
@@ -98,9 +81,9 @@ export default function BlackjackGame() {
     }
 
     const placeBet = (amount: number) => {
-      if (chips >= amount) {
+      if (balance >= amount) {
         setCurrentBet(currentBet + amount)
-        setChips(chips - amount)
+        setBalance(balance - amount)
       }
     }
 
@@ -139,7 +122,7 @@ export default function BlackjackGame() {
           endGame('push')
         } else {
           // Player blackjack pays 3:2
-          setChips(chips + currentBet * 2.5)
+          setBalance(balance + currentBet * 2.5)
           setMessage('Blackjack! You win!')
           setGameState('gameOver')
         }
@@ -228,21 +211,21 @@ export default function BlackjackGame() {
       
       switch (result) {
         case 'playerWin':
-          setChips(chips + currentBet * 2)
+          setBalance(balance + currentBet * 2)
           setMessage('You win!')
           break
         case 'dealerWin':
           setMessage('Dealer wins!')
           break
         case 'push':
-          setChips(chips + currentBet)
+          setBalance(balance + currentBet)
           setMessage('Push!')
           break
         case 'bust':
           setMessage('Bust! You lose!')
           break
         case 'dealerBust':
-          setChips(chips + currentBet * 2)
+          setBalance(balance + currentBet * 2)
           setMessage('Dealer busts! You win!')
           break
       }
@@ -259,8 +242,8 @@ export default function BlackjackGame() {
     } 
 
     const handleChipInteraction = (chip: ChipValue) => {
-      if (chips >= chip.value) {
-        setChips(chips - chip.value)
+      if (balance >= chip.value) {
+        setBalance(balance - chip.value)
         setCurrentBet(currentBet + chip.value)
         setBetChips([...betChips, { ...chip, id: chipId }])
         setChipId(chipId + 1)
@@ -278,7 +261,7 @@ export default function BlackjackGame() {
           clientX <= rect.right &&
           clientY >= rect.top &&
           clientY <= rect.bottom &&
-          chips >= chip.value
+          balance >= chip.value
         ) {
           handleChipInteraction(chip)
         }
@@ -286,7 +269,7 @@ export default function BlackjackGame() {
     }
 
     const double = () => {
-      if (chips >= currentBet) {
+      if (balance >= currentBet) {
         const newDeck = [...deck]
         const newCard = {
           ...drawCard(newDeck),
@@ -295,7 +278,7 @@ export default function BlackjackGame() {
         const newHand = [...playerHand, newCard]
         
         // Double the bet and update chips
-        setChips(chips - currentBet)
+        setBalance(balance - currentBet)
         setCurrentBet(currentBet * 2)
         setBetChips([...betChips, ...betChips]) // Double the bet chips visually
         
@@ -316,173 +299,141 @@ export default function BlackjackGame() {
     }
 
     const clearBet = () => {
-      setChips(chips + currentBet)
+      setBalance(balance + currentBet)
       setCurrentBet(0)
       setBetChips([])
     }
 
     return (
-      <div className="min-h-screen bg-gradient-to-b from-green-900 to-green-950 relative overflow-hidden">
+      <div className="relative">
         <div className="absolute inset-0 bg-[url('/felt-pattern.png')] opacity-20" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/30" />
         
-        <div className="relative max-w-6xl mx-auto p-4 pb-32">
-          {/* Game Info Bar */}
-          <div className="relative flex justify-between items-center mb-8 px-6 py-3 
-                        bg-black/60 rounded-xl backdrop-blur-md border border-white/10 
-                        shadow-2xl shadow-black/50">
-            <div className="flex gap-12 items-center">
-              <div className="text-2xl font-bold">
-                <span className="text-white/70">Balance</span>
-                <div className="text-3xl text-emerald-400">${chips}</div>
-              </div>
-              <div className="text-2xl font-bold">
-                <span className="text-white/70">Current Bet</span>
-                <div className="text-3xl text-yellow-400">${currentBet}</div>
-              </div>
-            </div>
-            <Button
-              onClick={resetBalance}
-              variant="outline"
-              className="text-white/70 hover:text-white border-white/20 hover:border-white/40"
-            >
-              Reset Balance
-            </Button>
-            {message && (
-              <div className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-yellow-400 animate-pulse bg-black/50 px-6 py-2 rounded-full backdrop-blur-sm">
-                {message}
+        <div className="relative max-w-6xl mx-auto p-4">
+          {/* Dealer Area */}
+          <div className="relative mb-8 text-center">
+            <h2 className="text-xl font-bold text-white/90 mb-2 flex items-center justify-center gap-2">
+              <span className="text-white/50">⎯</span>
+              Dealer's Hand
+              <span className="text-white/50">⎯</span>
+            </h2>
+            {gameState !== 'betting' && (
+              <div className="text-white/90 text-lg mb-4">
+                Score: {calculateHandValue(dealerHand.filter(card => !card.isHidden))}
               </div>
             )}
+            <div className="flex justify-center gap-2 min-h-[140px]">
+              {dealerHand.map((card, index) => (
+                <div 
+                  key={index}
+                  className="relative transform hover:translate-y-[-5px] transition-transform duration-300"
+                  style={{
+                    marginLeft: index > 0 ? '-1.5rem' : '0',
+                    animation: `dealCard 0.3s ease-out forwards`,
+                    animationDelay: `${card.animationDelay}s`,
+                    opacity: 0,
+                  }}
+                >
+                  <div className={`w-24 h-36 rounded-xl shadow-2xl ${card.isHidden ? 'bg-red-600' : 'bg-white'} 
+                    ${!card.isHidden && 'ring-1 ring-white/20'}`}>
+                    {!card.isHidden ? (
+                      <div className="w-full h-full flex flex-col items-center justify-center p-2">
+                        <div className={`text-5xl font-bold mb-2 ${card.suit === '♥️' || card.suit === '♦️' ? 'text-red-500' : 'text-black'}`}>
+                          {card.value}
+                        </div>
+                        <div className={`text-7xl ${card.suit === '♥️' || card.suit === '♦️' ? 'text-red-500' : 'text-black'}`}>
+                          {card.suit}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-500 to-red-700 rounded-xl">
+                        <div className="text-6xl opacity-50">🎴</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Main Game Area */}
-          <div className="relative bg-green-800/30 rounded-2xl border border-white/10 
-                        shadow-2xl p-8 backdrop-blur-sm">
-            {/* Dealer Area */}
-            <div className="relative mb-8 text-center">
-              <h2 className="text-xl font-bold text-white/90 mb-2 flex items-center justify-center gap-2">
-                <span className="text-white/50">⎯</span>
-                Dealer's Hand
-                <span className="text-white/50">⎯</span>
-              </h2>
-              {gameState !== 'betting' && (
-                <div className="text-white/90 text-lg mb-4">
-                  Score: {calculateHandValue(dealerHand.filter(card => !card.isHidden))}
-                </div>
-              )}
-              <div className="flex justify-center gap-2 min-h-[140px]">
-                {dealerHand.map((card, index) => (
-                  <div 
-                    key={index}
-                    className="relative transform hover:translate-y-[-5px] transition-transform duration-300"
-                    style={{
-                      marginLeft: index > 0 ? '-1.5rem' : '0',
-                      animation: `dealCard 0.3s ease-out forwards`,
-                      animationDelay: `${card.animationDelay}s`,
-                      opacity: 0,
-                    }}
-                  >
-                    <div className={`w-24 h-36 rounded-xl shadow-2xl ${card.isHidden ? 'bg-red-600' : 'bg-white'} 
-                      ${!card.isHidden && 'ring-1 ring-white/20'}`}>
-                      {!card.isHidden ? (
-                        <div className="w-full h-full flex flex-col items-center justify-center p-2">
-                          <div className={`text-5xl font-bold mb-2 ${card.suit === '♥️' || card.suit === '♦️' ? 'text-red-500' : 'text-black'}`}>
-                            {card.value}
-                          </div>
-                          <div className={`text-7xl ${card.suit === '♥️' || card.suit === '♦️' ? 'text-red-500' : 'text-black'}`}>
-                            {card.suit}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-500 to-red-700 rounded-xl">
-                          <div className="text-6xl opacity-50">🎴</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
+          {/* Player Area */}
+          <div className="relative text-center mt-8">
+            <h2 className="text-xl font-bold text-white/90 mb-2 flex items-center justify-center gap-2">
+              <span className="text-white/50">⎯</span>
+              Your Hand
+              <span className="text-white/50">⎯</span>
+            </h2>
+            {gameState !== 'betting' && (
+              <div className="text-white/90 text-lg mb-4">
+                Score: {calculateHandValue(playerHand)}
               </div>
+            )}
+            <div className="flex justify-center gap-2 min-h-[140px]">
+              {playerHand.map((card, index) => (
+                <div 
+                  key={index}
+                  className="relative transform hover:translate-y-[-5px] transition-transform duration-300"
+                  style={{
+                    marginLeft: index > 0 ? '-1.5rem' : '0',
+                    animation: `dealCard 0.3s ease-out forwards`,
+                    animationDelay: `${card.animationDelay}s`,
+                    opacity: 0,
+                  }}
+                >
+                  <div className={`w-24 h-36 rounded-xl shadow-2xl ${card.isHidden ? 'bg-red-600' : 'bg-white'} 
+                    ${!card.isHidden && 'ring-1 ring-white/20'}`}>
+                    {!card.isHidden ? (
+                      <div className="w-full h-full flex flex-col items-center justify-center p-2">
+                        <div className={`text-5xl font-bold mb-2 ${card.suit === '♥️' || card.suit === '♦️' ? 'text-red-500' : 'text-black'}`}>
+                          {card.value}
+                        </div>
+                        <div className={`text-7xl ${card.suit === '♥️' || card.suit === '♦️' ? 'text-red-500' : 'text-black'}`}>
+                          {card.suit}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-500 to-red-700 rounded-xl">
+                        <div className="text-6xl opacity-50">🎴</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {/* Player Area */}
-            <div className="relative text-center mt-8">
-              <h2 className="text-xl font-bold text-white/90 mb-2 flex items-center justify-center gap-2">
-                <span className="text-white/50">⎯</span>
-                Your Hand
-                <span className="text-white/50">⎯</span>
-              </h2>
-              {gameState !== 'betting' && (
-                <div className="text-white/90 text-lg mb-4">
-                  Score: {calculateHandValue(playerHand)}
-                </div>
-              )}
-              <div className="flex justify-center gap-2 min-h-[140px]">
-                {playerHand.map((card, index) => (
-                  <div 
-                    key={index}
-                    className="relative transform hover:translate-y-[-5px] transition-transform duration-300"
-                    style={{
-                      marginLeft: index > 0 ? '-1.5rem' : '0',
-                      animation: `dealCard 0.3s ease-out forwards`,
-                      animationDelay: `${card.animationDelay}s`,
-                      opacity: 0,
-                    }}
+            {/* Game Controls */}
+            {gameState === 'playing' && (
+              <div className="mt-8 max-w-3xl mx-auto">
+                <div className="flex justify-center gap-4 bg-black/40 backdrop-blur-md p-4 rounded-xl border border-white/10 shadow-2xl">
+                  <Button 
+                    onClick={hit}
+                    className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 
+                             text-white font-bold text-lg px-12 py-6 rounded-xl shadow-lg shadow-emerald-900/30
+                             transform hover:scale-105 transition-all duration-200 min-w-[140px]"
                   >
-                    <div className={`w-24 h-36 rounded-xl shadow-2xl ${card.isHidden ? 'bg-red-600' : 'bg-white'} 
-                      ${!card.isHidden && 'ring-1 ring-white/20'}`}>
-                      {!card.isHidden ? (
-                        <div className="w-full h-full flex flex-col items-center justify-center p-2">
-                          <div className={`text-5xl font-bold mb-2 ${card.suit === '♥️' || card.suit === '♦️' ? 'text-red-500' : 'text-black'}`}>
-                            {card.value}
-                          </div>
-                          <div className={`text-7xl ${card.suit === '♥️' || card.suit === '♦️' ? 'text-red-500' : 'text-black'}`}>
-                            {card.suit}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-500 to-red-700 rounded-xl">
-                          <div className="text-6xl opacity-50">🎴</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Game Controls */}
-              {gameState === 'playing' && (
-                <div className="mt-8 max-w-3xl mx-auto">
-                  <div className="flex justify-center gap-4 bg-black/40 backdrop-blur-md p-4 rounded-xl border border-white/10 shadow-2xl">
-                    <Button 
-                      onClick={hit}
-                      className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 
-                               text-white font-bold text-lg px-12 py-6 rounded-xl shadow-lg shadow-emerald-900/30
-                               transform hover:scale-105 transition-all duration-200 min-w-[140px]"
-                    >
-                      Hit
-                    </Button>
-                    <Button 
-                      onClick={stand}
-                      className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 
-                               text-white font-bold text-lg px-12 py-6 rounded-xl shadow-lg shadow-red-900/30
-                               transform hover:scale-105 transition-all duration-200 min-w-[140px]"
-                    >
-                      Stand
-                    </Button>
-                    <Button 
-                      onClick={double}
-                      disabled={chips < currentBet || playerHand.length > 2}
-                      className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 
-                               text-white font-bold text-lg px-12 py-6 rounded-xl shadow-lg shadow-purple-900/30
-                               disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 
-                               transition-all duration-200 min-w-[140px]"
-                    >
-                      Double
-                    </Button>
-                  </div>
+                    Hit
+                  </Button>
+                  <Button 
+                    onClick={stand}
+                    className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 
+                             text-white font-bold text-lg px-12 py-6 rounded-xl shadow-lg shadow-red-900/30
+                             transform hover:scale-105 transition-all duration-200 min-w-[140px]"
+                  >
+                    Stand
+                  </Button>
+                  <Button 
+                    onClick={double}
+                    disabled={balance < currentBet || playerHand.length > 2}
+                    className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 
+                             text-white font-bold text-lg px-12 py-6 rounded-xl shadow-lg shadow-purple-900/30
+                             disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 
+                             transition-all duration-200 min-w-[140px]"
+                  >
+                    Double
+                  </Button>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Betting Area */}
@@ -547,14 +498,14 @@ export default function BlackjackGame() {
                       whileDrag={{ scale: 1.1, zIndex: 50 }}
                       dragSnapToOrigin
                       onDragEnd={(event) => handleDragEnd(chip, event)}
-                      onClick={() => chips >= chip.value && handleChipInteraction(chip)}
+                      onClick={() => balance >= chip.value && handleChipInteraction(chip)}
                       className={`
                         ${chip.color} w-20 h-20 rounded-full
                         flex items-center justify-center 
-                        ${chips >= chip.value ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}
+                        ${balance >= chip.value ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}
                         shadow-lg border-4 ${chip.borderColor}
                         relative group transform transition-all duration-200
-                        hover:shadow-2xl ${chips >= chip.value && 'hover:-translate-y-2'}
+                        hover:shadow-2xl ${balance >= chip.value && 'hover:-translate-y-2'}
                       `}
                     >
                       <div className={`relative text-center ${chip.textColor}`}>

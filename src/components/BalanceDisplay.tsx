@@ -1,15 +1,10 @@
 'use client'
 
-const formatBalance = (num: number) => {
-  return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-}
+import { useBalance } from "@/contexts/BalanceContext"
 
-interface BalanceDisplayProps {
-  balance: number;
-  setBalance: (balance: number) => void;
-}
+export const BalanceDisplay = () => {
+  const { balance, setBalance } = useBalance()
 
-export const BalanceDisplay = ({ balance, setBalance }: BalanceDisplayProps) => {
   const handleOpenSinoClick = () => {
     if (balance < 1000) {
       setBalance(1000);
@@ -19,7 +14,7 @@ export const BalanceDisplay = ({ balance, setBalance }: BalanceDisplayProps) => 
   return (
     <div className="flex text-sm">
       <div className="bg-[#1A2C38] rounded-l-lg px-4 py-2 flex items-center">
-        <span className="text-white font-medium">${formatBalance(balance)}</span>
+        <span className="text-white font-medium">${balance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</span>
       </div>
       <button 
         onClick={handleOpenSinoClick}

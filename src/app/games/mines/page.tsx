@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { GemIcon } from './components/GemIcon'
 import { MineIcon } from './components/MineIcon'
 import { WinNotification } from './components/WinNotification'
-import { BalanceDisplay } from "@/components/BalanceDisplay"
+import { useBalance } from "@/contexts/BalanceContext"
 
 // Add this keyframes definition
 const styles = `
@@ -32,14 +32,7 @@ const formatBalance = (num: number) => {
 }
 
 export default function MinesGame() {
-  const [balance, setBalance] = useState(() => {
-    // Only access localStorage on the client side
-    if (typeof window !== 'undefined') {
-      const savedBalance = localStorage.getItem('balance')
-      return savedBalance ? parseInt(savedBalance) : 1000
-    }
-    return 1000 // Default value for server-side rendering
-  })
+  const { balance, setBalance } = useBalance()
   const [currentBet, setCurrentBet] = useState(0)
   const [mineCount, setMineCount] = useState(3)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -57,11 +50,6 @@ export default function MinesGame() {
   const winSound = typeof Audio !== 'undefined' ? new Audio('/win.mp3') : null
   const loseSound = typeof Audio !== 'undefined' ? new Audio('/fail.mp3') : null
 
-  // Save balance to localStorage
-  useEffect(() => {
-    localStorage.setItem('balance', balance.toString())
-  }, [balance])
-
   const initializeGame = () => {
     if (currentBet <= 0) {
       setMessage('Please enter a bet amount')
@@ -72,11 +60,10 @@ export default function MinesGame() {
       return
     }
 
+    setBalance(balance - currentBet)
+    
     // Reset potential win
     setPotentialWin(0)
-    
-    // Deduct bet from balance
-    setBalance(prev => prev - currentBet)
     
     // Create new board
     const newCells: Cell[] = Array(25).fill(null).map(() => ({
@@ -188,18 +175,13 @@ export default function MinesGame() {
     }, 2000)
     
     // Add winnings to balance
-    setBalance(prev => prev + totalWin)
+    setBalance(balance + totalWin)
     setPotentialWin(0)
   }
 
   return (
-    <div className="h-screen bg-[#0F212E] p-6">
+    <div className="p-6">
       <style>{styles}</style>
-      {/* Balance Display */}
-      <div className="max-w-[900px] mx-auto mb-4 flex justify-center items-center">
-        <BalanceDisplay balance={balance} setBalance={setBalance} />
-      </div>
-
       <div className="max-w-[900px] mx-auto flex gap-6">
         {/* Left Panel */}
         <div className="w-[280px] bg-[#1A2C38] rounded-lg p-4">
