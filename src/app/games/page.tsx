@@ -37,13 +37,13 @@ const games = [
 //     players: "597",
 //     label: "STAKE ORIGINALS"
 //   },
-//   {
-//     name: "CRASH",
-//     image: "https://mediumrare.imgix.net/c830595cbd07b2561ac76a365c2f01869dec9a8fe5e7be30634d78c51b2cc91e?w=360&h=472&fit=min&auto=format",
-//     href: "/games/crash",
-//     players: "297",
-//     label: "STAKE ORIGINALS"
-//   },
+  {
+    name: "CRASH",
+    image: "https://mediumrare.imgix.net/c830595cbd07b2561ac76a365c2f01869dec9a8fe5e7be30634d78c51b2cc91e?w=360&h=472&fit=min&auto=format",
+    href: "/games/crash",
+    players: "297",
+    label: "STAKE ORIGINALS"
+  },
 ];
 
 export default function GamesPage() {
