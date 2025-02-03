@@ -20,8 +20,12 @@ interface Ball {
 
 export default function PlinkoGame() {
   const [balance, setBalance] = useState(() => {
-    const savedBalance = localStorage.getItem('balance')
-    return savedBalance ? parseInt(savedBalance) : 1000
+    // Only access localStorage on the client side
+    if (typeof window !== 'undefined') {
+      const savedBalance = localStorage.getItem('plinkoBalance')
+      return savedBalance ? parseInt(savedBalance) : 1000
+    }
+    return 1000 // Default value for server-side rendering
   })
   const [currentBet, setCurrentBet] = useState(0)
   const [riskLevel, setRiskLevel] = useState<'low' | 'medium' | 'high'>('high')
@@ -37,7 +41,7 @@ export default function PlinkoGame() {
 
   // Save balance to localStorage
   useEffect(() => {
-    localStorage.setItem('balance', balance.toString())
+    localStorage.setItem('plinkoBalance', balance.toString())
   }, [balance])
 
   const generatePinPositions = () => {
