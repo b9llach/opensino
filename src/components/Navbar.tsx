@@ -12,7 +12,7 @@ export const Navbar = () => {
       {/* OpenSino Button */}
       <div className="p-4">
         <button className="w-full bg-[#4CAF50] hover:bg-[#45a049] text-white rounded-lg px-4 py-2.5 font-medium text-lg tracking-wide">
-          SOCIAL CASINO
+          OPENSINO
         </button>
       </div>
 
