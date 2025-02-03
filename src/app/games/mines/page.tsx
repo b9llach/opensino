@@ -136,7 +136,7 @@ export default function MinesGame() {
     }
 
     // Add house edge (approximately 4%)
-    const houseEdge = 1
+    const houseEdge = 0.96
     return (1 / probability) * houseEdge
   }
 
