@@ -14,8 +14,11 @@ interface PayLine {
 
 export default function SlotsGame() {
   const [balance, setBalance] = useState(() => {
-    const savedBalance = localStorage.getItem('slotsBalance')
-    return savedBalance ? parseInt(savedBalance) : 1000
+    if (typeof window !== 'undefined') {
+      const savedBalance = localStorage.getItem('slotsBalance')
+      return savedBalance ? parseInt(savedBalance) : 1000
+    }
+    return 1000 // Default value for server-side rendering
   })
   const [currentBet, setCurrentBet] = useState(0)
   const [betPerLine, setBetPerLine] = useState(1) // In cents

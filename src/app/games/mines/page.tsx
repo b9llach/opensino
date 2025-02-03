@@ -33,8 +33,12 @@ const formatBalance = (num: number) => {
 
 export default function MinesGame() {
   const [balance, setBalance] = useState(() => {
-    const savedBalance = localStorage.getItem('balance')
-    return savedBalance ? parseInt(savedBalance) : 1000
+    // Only access localStorage on the client side
+    if (typeof window !== 'undefined') {
+      const savedBalance = localStorage.getItem('balance')
+      return savedBalance ? parseInt(savedBalance) : 1000
+    }
+    return 1000 // Default value for server-side rendering
   })
   const [currentBet, setCurrentBet] = useState(0)
   const [mineCount, setMineCount] = useState(3)
