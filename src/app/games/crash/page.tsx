@@ -43,10 +43,21 @@ export default function CrashGame() {
   const lastTimestamp = useRef<number>(0)
   const startTime = useRef<number>(0)
 
-  // Sound effects
-  const clickSound = typeof Audio !== 'undefined' ? new Audio('/click.mp3') : null
-  const winSound = typeof Audio !== 'undefined' ? new Audio('/win.mp3') : null
-  const loseSound = typeof Audio !== 'undefined' ? new Audio('/fail.mp3') : null
+  // Update sound effects initialization
+  const [sounds] = useState(() => ({
+    click: typeof window !== 'undefined' ? new Audio('/click.mp3') : null,
+    win: typeof window !== 'undefined' ? new Audio('/win.mp3') : null,
+    lose: typeof window !== 'undefined' ? new Audio('/fail.mp3') : null
+  }))
+
+  // Add sound play helper function
+  const playSound = (soundType: 'click' | 'win' | 'lose') => {
+    const sound = sounds[soundType];
+    if (sound) {
+      sound.currentTime = 0; // Reset sound to start
+      sound.play().catch(err => console.error(`Error playing ${soundType} sound:`, err));
+    }
+  }
 
   const generateCrashPoint = () => {
     // This uses a house edge of approximately 4%
@@ -58,6 +69,7 @@ export default function CrashGame() {
   const startGame = () => {
     if (currentBet <= 0 || currentBet > balance) return
     
+    playSound('click') // Add click sound
     setBalance(balance - currentBet)
     setIsPlaying(true)
     setCrashPoint(generateCrashPoint())
@@ -97,8 +109,7 @@ export default function CrashGame() {
   const cashOut = () => {
     if (!isPlaying) return
 
-    // Play win sound
-    winSound?.play().catch(console.error)
+    playSound('win')
 
     const winAmount = currentBet * multiplier
     const profit = winAmount - currentBet
@@ -120,8 +131,7 @@ export default function CrashGame() {
     }
 
     if (!cashedOut) {
-      // Play lose sound
-      loseSound?.play().catch(console.error)
+      playSound('lose')
     }
 
     setIsPlaying(false)

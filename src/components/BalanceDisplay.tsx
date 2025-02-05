@@ -20,8 +20,9 @@ export const BalanceDisplay = () => {
         onClick={handleOpenSinoClick}
         className="bg-[#4A72FF] hover:bg-[#3A62FF] text-white px-4 py-2 rounded-r-lg transition-colors font-medium border-l border-[#2A52FF]"
       >
-        OpenSino
+        ShitStake
       </button>
     </div>
+
   );
 }; 

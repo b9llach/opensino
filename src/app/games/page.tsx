@@ -9,13 +9,13 @@ const games = [
         players: "552",
         label: "STAKE ORIGINALS"
       },
-  {
-    name: "PLINKO",
-    image: "https://mediumrare.imgix.net/5cbb2498c956527e6584c6af216489b85bbb7a909c7d3c4e131a3be9bd1cc6bf?w=360&h=472&fit=min&auto=format",
-    href: "/games/plinko",
-    players: "1,060",
-    label: "STAKE ORIGINALS"
-  },
+  // {
+  //   name: "PLINKO",
+  //   image: "https://mediumrare.imgix.net/5cbb2498c956527e6584c6af216489b85bbb7a909c7d3c4e131a3be9bd1cc6bf?w=360&h=472&fit=min&auto=format",
+  //   href: "/games/plinko",
+  //   players: "1,060",
+  //   label: "STAKE ORIGINALS"
+  // },
   {
     name: "BLACKJACK",
     image: "https://mediumrare.imgix.net/5fcbd552a53b9be85428ecd7fa0ef663f9d763bd8a504dd0de222bc873b79887?w=360&h=472&fit=min&auto=format",

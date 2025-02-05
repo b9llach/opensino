@@ -14,7 +14,7 @@ type Card = {
   animationDelay?: number
 }
 
-type GameState = 'betting' | 'playing' | 'dealerTurn' | 'gameOver'
+type GameState = 'betting' | 'playing' | 'dealerTurn' | 'gameOver' | 'split'
 
 // Add this new type for chips
 type ChipValue = {
@@ -44,6 +44,9 @@ export default function BlackjackGame() {
     const [message, setMessage] = useState('')
     const [betChips, setBetChips] = useState<BetChip[]>([])
     const [chipId, setChipId] = useState(0)
+    const [splitHands, setSplitHands] = useState<Card[][]>([])
+    const [currentHandIndex, setCurrentHandIndex] = useState(0)
+    const [splitBets, setSplitBets] = useState<number[]>([])
 
     const chipValues: ChipValue[] = [
       { value: 100, color: 'bg-purple-600', borderColor: 'border-purple-300', textColor: 'text-purple-100', shadowColor: 'shadow-purple-900' },
@@ -137,25 +140,46 @@ export default function BlackjackGame() {
 
     const hit = () => {
       const newDeck = [...deck]
-      const newCard = {
-        ...drawCard(newDeck),
-        animationDelay: playerHand.length * 0.1
+      const newCard = { ...drawCard(newDeck), animationDelay: playerHand.length * 0.1 }
+      
+      if (gameState === 'split') {
+        const newHand = [...playerHand, newCard]
+        setPlayerHand(newHand)
+        
+        if (calculateHandValue(newHand) > 21) {
+          if (currentHandIndex === 0 && splitHands.length > 0) {
+            // First hand bust, move to second hand
+            setCurrentHandIndex(1)
+            setPlayerHand(splitHands[0])
+            setSplitHands([])
+          } else {
+            endGame('bust')
+          }
+        }
+      } else {
+        const newHand = [...playerHand, newCard]
+        setPlayerHand(newHand)
+        if (calculateHandValue(newHand) > 21) {
+          endGame('bust')
+        }
       }
-      const newHand = [...playerHand, newCard]
-      setPlayerHand(newHand)
       setDeck(newDeck)
-
-      if (calculateHandValue(newHand) > 21) {
-        endGame('bust')
-      }
     }
 
     const stand = () => {
-      setGameState('dealerTurn')
-      // Reveal dealer's hidden card first
-      const revealedHand = dealerHand.map(card => ({ ...card, isHidden: false }))
-      setDealerHand(revealedHand)
-      setTimeout(() => playDealer(), 800) // Wait for card flip animation
+      if (gameState === 'split' && currentHandIndex === 0 && splitHands.length > 0) {
+        // Store first hand and move to second hand
+        const firstHand = [...playerHand]
+        setPlayerHand(splitHands[0])
+        setSplitHands([firstHand])
+        setCurrentHandIndex(1)
+      } else {
+        // Reveal dealer's card and play dealer's turn
+        setGameState('dealerTurn')
+        const revealedHand = dealerHand.map(card => ({ ...card, isHidden: false }))
+        setDealerHand(revealedHand)
+        setTimeout(() => playDealer(), 800)
+      }
     }
 
     const playDealer = async () => {
@@ -207,27 +231,73 @@ export default function BlackjackGame() {
     }
 
     const endGame = (result: 'playerWin' | 'dealerWin' | 'push' | 'bust' | 'dealerBust') => {
+      if (gameState === 'split' && currentHandIndex === 0 && splitHands.length > 0) {
+        // Store result of first hand and move to second hand
+        const firstHand = playerHand
+        setPlayerHand(splitHands[0])
+        setSplitHands([firstHand])
+        setCurrentHandIndex(1)
+        return
+      }
+
       setGameState('gameOver')
       
-      switch (result) {
-        case 'playerWin':
-          setBalance(balance + currentBet * 2)
-          setMessage('You win!')
-          break
-        case 'dealerWin':
-          setMessage('Dealer wins!')
-          break
-        case 'push':
-          setBalance(balance + currentBet)
-          setMessage('Push!')
-          break
-        case 'bust':
-          setMessage('Bust! You lose!')
-          break
-        case 'dealerBust':
-          setBalance(balance + currentBet * 2)
-          setMessage('Dealer busts! You win!')
-          break
+      const handleWin = (bet: number) => setBalance(balance + bet * 2)
+      const handlePush = (bet: number) => setBalance(balance + bet)
+      
+      if (gameState === 'split') {
+        // Handle both hands
+        const firstHandValue = calculateHandValue(splitHands[0])
+        const secondHandValue = calculateHandValue(playerHand)
+        const dealerValue = calculateHandValue(dealerHand)
+        
+        let message = ''
+        
+        // First hand result
+        if (firstHandValue <= 21 && (dealerValue > 21 || firstHandValue > dealerValue)) {
+          handleWin(currentBet)
+          message += 'First hand wins! '
+        } else if (firstHandValue <= 21 && firstHandValue === dealerValue) {
+          handlePush(currentBet)
+          message += 'First hand push! '
+        } else {
+          message += 'First hand loses! '
+        }
+        
+        // Second hand result
+        if (secondHandValue <= 21 && (dealerValue > 21 || secondHandValue > dealerValue)) {
+          handleWin(currentBet)
+          message += 'Second hand wins!'
+        } else if (secondHandValue <= 21 && secondHandValue === dealerValue) {
+          handlePush(currentBet)
+          message += 'Second hand push!'
+        } else {
+          message += 'Second hand loses!'
+        }
+        
+        setMessage(message)
+      } else {
+        // Handle single hand (existing logic)
+        switch (result) {
+          case 'playerWin':
+            handleWin(currentBet)
+            setMessage('You win!')
+            break
+          case 'dealerWin':
+            setMessage('Dealer wins!')
+            break
+          case 'push':
+            handlePush(currentBet)
+            setMessage('Push!')
+            break
+          case 'bust':
+            setMessage('Bust! You lose!')
+            break
+          case 'dealerBust':
+            handleWin(currentBet * 2)
+            setMessage('Dealer busts! You win!')
+            break
+        }
       }
     }
 
@@ -302,6 +372,34 @@ export default function BlackjackGame() {
       setBalance(balance + currentBet)
       setCurrentBet(0)
       setBetChips([])
+    }
+
+    const split = () => {
+      // Helper function to get numeric value for comparison
+      const getNumericValue = (value: string) => {
+        return ['K', 'Q', 'J'].includes(value) ? '10' : value
+      }
+
+      if (playerHand.length === 2 && 
+          getNumericValue(playerHand[0].value) === getNumericValue(playerHand[1].value) && 
+          balance >= currentBet) {
+        // Take second card to create new hand
+        const hand1 = [playerHand[0]]
+        const hand2 = [playerHand[1]]
+        
+        // Deal one new card to first hand immediately
+        const newDeck = [...deck]
+        const newCard = { ...drawCard(newDeck), animationDelay: 0.1 }
+        hand1.push(newCard)
+        
+        // Update state
+        setDeck(newDeck)
+        setPlayerHand(hand1)
+        setSplitHands([hand2])
+        setBalance(balance - currentBet) // Deduct additional bet
+        setGameState('split')
+        setCurrentHandIndex(0)
+      }
     }
 
     return (
@@ -431,6 +529,21 @@ export default function BlackjackGame() {
                   >
                     Double
                   </Button>
+                  {playerHand.length === 2 && 
+                   playerHand[0].value === playerHand[1].value && 
+                   balance >= currentBet && (
+                    <Button 
+                      onClick={split}
+                      className="bg-gradient-to-r from-yellow-500 to-yellow-600 
+                               hover:from-yellow-600 hover:to-yellow-700 
+                               text-white font-bold text-lg px-12 py-6 rounded-xl 
+                               shadow-lg shadow-yellow-900/30
+                               transform hover:scale-105 transition-all duration-200 
+                               min-w-[140px]"
+                    >
+                      Split
+                    </Button>
+                  )}
                 </div>
               </div>
             )}

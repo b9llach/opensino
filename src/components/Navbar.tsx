@@ -9,27 +9,26 @@ export const Navbar = () => {
 
   return (
     <div className="w-64 bg-[#1A2730] h-screen flex flex-col border-r border-[#243441]">
-      {/* OpenSino Button */}
+      {/* OpenShitStakeButton */}
       <div className="p-4">
         <button className="w-full bg-[#4CAF50] hover:bg-[#45a049] text-white rounded-lg px-4 py-2.5 font-medium text-lg tracking-wide">
-          OPENSINO
+          ShitStake
         </button>
       </div>
 
       {/* Quick Access */}
-      <div className="px-4 space-y-1">
+      {/* <div className="px-4 space-y-1">
         <NavItem href="/favourites" icon={<Icons.Star />} label="Favourites" active={pathname === '/favourites'} />
         <NavItem href="/recent" icon={<Icons.Clock />} label="Recent" active={pathname === '/recent'} />
         <NavItem href="/challenges" icon={<Icons.Target />} label="Challenges" active={pathname === '/challenges'} />
         <NavItem href="/gameplay" icon={<Icons.Gamepad />} label="My Game Play" active={pathname === '/gameplay'} />
-      </div>
+      </div> */}
 
       {/* Games Section */}
       <div className="px-4 mt-6">
         <div className="text-white text-lg mb-2">Games</div>
         <div className="space-y-1">
-          <NavItem href="/games" icon={<Icons.Fire />} label="Sino Originals" active={pathname === '/games'} />
-          <NavItem href="/slots" icon={<Icons.Slots />} label="Slot Games" active={pathname === '/slots'} />
+          <NavItem href="/games" icon={<Icons.Fire />} label="ShitStake Originals" active={pathname === '/games'} />
         </div>
       </div>
     </div>
