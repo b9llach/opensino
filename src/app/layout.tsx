@@ -1,15 +1,37 @@
 'use client'
 
-import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Geist, Inter } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { BalanceDisplay } from "@/components/BalanceDisplay";
 import { BalanceProvider } from "@/contexts/BalanceContext";
 
-const geist = Geist({
-  subsets: ["latin"],
-});
+const inter = Inter({ subsets: ['latin'] });
+
+export const metadata = {
+  title: 'ShitStake',
+  description: 'ShitStake. It says it in the name.',
+  icons: {
+    icon: 'https://ntk8n4sii7.ufs.sh/f/cLWmiQyDE9NlgIwLQ42tHFLfQ2ob0xGRyKDipPrXh6ATZuSe',
+  },
+  openGraph: {
+    images: 'https://ntk8n4sii7.ufs.sh/f/cLWmiQyDE9NlSCkiffdvg0uRDOQbXUdVTYkEJCo968PMcjFn',
+  }, 
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ShitStake',
+    description: 'ShitStake. It says it in the name.',
+    images: 'https://ntk8n4sii7.ufs.sh/f/cLWmiQyDE9NlSCkiffdvg0uRDOQbXUdVTYkEJCo968PMcjFn',
+  },
+
+
+  robots: {
+    index: true,
+    follow: true,
+    'max-image-preview': 'large',
+    'max-video-preview': 1000,
+  },
+};
 
 function AppContent({ children }: { children: React.ReactNode }) {
   return (
@@ -36,10 +58,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${geist.className} overflow-hidden`}>
+      <body className={`${inter.className} overflow-hidden`}>
         <BalanceProvider>
           <AppContent>{children}</AppContent>
-        </BalanceProvider>
+        </BalanceProvider>\
       </body>
     </html>
   );
