@@ -14,10 +14,10 @@ export const BalanceDisplay = () => {
   };
 
   const handleCopyContractAddress = () => {
-    const contractAddress = "1234567890abcdef1234567890abcdef12345678";
+    const contractAddress = "ZivJeHuu5aLGgXMKeMv2g4vWTwPRWdr5KwrLsuxpump";
     navigator.clipboard.writeText(contractAddress);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 5000);
   };
 
   return (
@@ -36,7 +36,7 @@ export const BalanceDisplay = () => {
         onClick={handleCopyContractAddress}
         className="bg-[#4A72FF] hover:bg-[#3A62FF] text-white px-4 py-2 rounded-r-lg transition-colors font-medium border-l border-[#2A52FF]"
       >
-        {copied ? 'Copied!' : 'Copy Contract Address'}
+        {copied ? 'Copied!' : 'ZivJeHuu5aLGgXMKeMv2g4vWTwPRWdr5KwrLsuxpump'}
       </button> 
 
       
