@@ -1,5 +1,3 @@
-'use client'
-
 import { Geist, Inter } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
@@ -61,7 +59,7 @@ export default function RootLayout({
       <body className={`${inter.className} overflow-hidden`}>
         <BalanceProvider>
           <AppContent>{children}</AppContent>
-        </BalanceProvider>\
+        </BalanceProvider>
       </body>
     </html>
   );
